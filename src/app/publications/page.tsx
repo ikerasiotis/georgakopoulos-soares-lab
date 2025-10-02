@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+
 import Link from "next/link";
 
 import { getPublications } from "@/libs/api";
@@ -13,25 +14,21 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-interface PublicationsPageProps {
-  searchParams?: {
-    page?: string;
-  };
-}
-
-function parsePage(searchParams?: { page?: string }) {
-  const raw = searchParams?.page ?? "1";
+function parsePage(
+  searchParams?: Record<string, string | string[] | undefined>
+) {
+  const raw = typeof searchParams?.page === "string" ? searchParams.page : "1";
   const value = Number.parseInt(raw, 10);
-  if (!Number.isFinite(value) || value < 1) {
-    return 1;
-  }
-  return value;
+  return Number.isFinite(value) && value > 0 ? value : 1;
 }
 
 export default async function PublicationsPage({
   searchParams,
-}: PublicationsPageProps) {
-  const currentPage = parsePage(searchParams);
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const { page } = await searchParams;
+  const currentPage = parsePage({ page });
   const { data: publications, meta } = await getPublications(currentPage, 10);
   const firstIndex = (meta.page - 1) * meta.pageSize + 1;
   const lastIndex = Math.min(meta.total, meta.page * meta.pageSize);
