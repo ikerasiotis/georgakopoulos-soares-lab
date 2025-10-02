@@ -17,6 +17,12 @@ const nextConfig: NextConfig = {
         hostname: "placehold.co",
         pathname: "/**",
       },
+      // strapi cloud production
+      {
+        protocol: "https",
+        hostname: "uplifting-nest-91966302b0.media.strapiapp.com",
+        pathname: "/**",
+      },
     ],
   },
 };
