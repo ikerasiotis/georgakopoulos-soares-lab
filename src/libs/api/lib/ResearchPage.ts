@@ -225,7 +225,9 @@ function extractAttributes(
 export async function getResearchPageContent(): Promise<ResearchContent> {
   try {
     const response = await axios.get<StrapiResponse<StrapiResearchEnvelope>>(
-      buildStrapiUrl("/research-page?populate=*"),
+      buildStrapiUrl(
+        "/research-page?populate=heroTitle,heroSubtitle,approachParagraphs,approachHighlights,focusAreas.projects,focusAreas.tags,focusAreas.accent,methods.accent,resources.links,resources.accent"
+      ),
       {
         headers: {
           "Content-Type": "application/json",
