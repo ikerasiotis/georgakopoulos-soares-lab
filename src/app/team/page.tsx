@@ -40,11 +40,6 @@ export default async function TeamPage() {
     photoUrl: resolvePortraitSrc(member.portrait ?? null) ?? member.photoUrl,
   }));
 
-  console.log("Resolved Team Members:");
-  resolvedMembers.forEach((member) => {
-    console.log(member.name, member.photoUrl, member.portrait);
-  });
-
   return (
     <div>
       <TeamHero title={heroTitle} subtitle={heroSubtitle} />

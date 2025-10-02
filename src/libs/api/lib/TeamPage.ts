@@ -84,6 +84,8 @@ type StrapiMember = StrapiComponent<{
   email?: string | null;
   bio?: string | null;
   portrait?: StrapiImage | null;
+  linkedin?: string | null;
+  github?: string | null;
 }>;
 
 type StrapiTeamAttributes = {
@@ -478,6 +480,8 @@ function normalizeMembers(members?: StrapiMember[] | null): TeamMember[] {
       bio: member.bio?.trim() || null,
       photoUrl: portraitUrl ?? null,
       portrait: portrait,
+      linkedin: member.linkedin?.trim() || null,
+      github: member.github?.trim() || null,
     });
   }
 
@@ -534,7 +538,7 @@ function normalizeTeamResponse(raw: StrapiTeamAttributes): TeamPageContent {
 export async function getTeamPageContent(): Promise<TeamPageContent> {
   try {
     const response = await axios.get<StrapiResponse<StrapiTeamAttributes>>(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/team-page?populate[principalInvestigatorEducation]=true&populate[principalInvestigatorSocialLinks]=true&populate[principalInvestigatorPortrait]=true&populate[members][populate][portrait]=true`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/team-page?populate[principalInvestigatorEducation]=true&populate[principalInvestigatorSocialLinks]=true&populate[principalInvestigatorPortrait]=true&populate[members][populate]=*`,
       {
         headers: {
           "Content-Type": "application/json",
