@@ -77,10 +77,10 @@ export interface NavigationLink {
 export interface NavigationSection {
   title: string;
   links: NavigationLink[];
-  ctaLabel?: string | null;
-  ctaUrl?: string | null;
-  ctaOpenInNewTab?: boolean;
-  ctaAriaLabel?: string | null;
+  ctaLabel: string | null;
+  ctaUrl: string | null;
+  ctaOpenInNewTab: boolean;
+  ctaAriaLabel: string | null;
 }
 
 export interface MediaAsset {
@@ -123,16 +123,32 @@ const FALLBACK_NAVIGATION: NavigationLink[] = [
         ],
         ctaLabel: "Show All Databases",
         ctaUrl: "/resources/databases",
+        ctaOpenInNewTab: false,
+        ctaAriaLabel: null,
       },
       {
         title: "Software & Tools",
         links: [
-          { label: "Tool 1", url: "/resources/software/tool-1", isVisible: true },
-          { label: "Tool 2", url: "/resources/software/tool-2", isVisible: true },
-          { label: "Tool 3", url: "/resources/software/tool-3", isVisible: true },
+          {
+            label: "Tool 1",
+            url: "/resources/software/tool-1",
+            isVisible: true,
+          },
+          {
+            label: "Tool 2",
+            url: "/resources/software/tool-2",
+            isVisible: true,
+          },
+          {
+            label: "Tool 3",
+            url: "/resources/software/tool-3",
+            isVisible: true,
+          },
         ],
         ctaLabel: "Show All Tools",
         ctaUrl: "/resources/software",
+        ctaOpenInNewTab: false,
+        ctaAriaLabel: null,
       },
     ],
   },
@@ -219,7 +235,7 @@ function normalizeMenuSections(
         ctaAriaLabel: section.ctaAriaLabel?.trim() ?? null,
       } satisfies NavigationSection;
     })
-    .filter((section): section is NavigationSection => Boolean(section));
+    .filter((section): section is NavigationSection => section !== null);
 }
 
 function normalizeNavigation(

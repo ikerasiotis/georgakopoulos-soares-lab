@@ -117,16 +117,23 @@ function extractHomeAttributes(
   }
 
   if ("attributes" in data && data.attributes) {
-    return data.attributes;
+    return data.attributes ?? undefined;
   }
 
-  const { id, documentId, ...rest } = data;
-  return rest;
+  // For the case where attributes are at the top level
+  const rest = data as StrapiHomePageAttributes;
+  return {
+    heroTitle: rest.heroTitle ?? null,
+    heroSubtitle: rest.heroSubtitle ?? null,
+    aboutHeading: rest.aboutHeading ?? null,
+    aboutBody: rest.aboutBody ?? null,
+    aboutImage: rest.aboutImage ?? null,
+  };
 }
 
-function buildPublicationLinks(publication: Awaited<
-  ReturnType<typeof getPublications>
->["data"][number]): HomepagePublicationLink[] {
+function buildPublicationLinks(
+  publication: Awaited<ReturnType<typeof getPublications>>["data"][number]
+): HomepagePublicationLink[] {
   const links: HomepagePublicationLink[] = [];
 
   if (Array.isArray(publication.resources)) {
@@ -146,7 +153,11 @@ function buildPublicationLinks(publication: Awaited<
   }
 
   if (links.length === 0 && publication.link) {
-    links.push({ label: "Read more", href: publication.link, type: "external" });
+    links.push({
+      label: "Read more",
+      href: publication.link,
+      type: "external",
+    });
   }
 
   return links;
@@ -192,8 +203,8 @@ export async function getHomePageContent(): Promise<HomePageContent> {
 
     const aboutImage = resolveMediaUrl(attributes?.aboutImage);
     const about = {
-      heading: attributes?.aboutHeading?.trim() ||
-        FALLBACK_HOME_PAGE.about.heading,
+      heading:
+        attributes?.aboutHeading?.trim() || FALLBACK_HOME_PAGE.about.heading,
       bodyHtml: attributes?.aboutBody || FALLBACK_HOME_PAGE.about.bodyHtml,
       imageUrl: aboutImage.url,
       imageAlt: aboutImage.alt,
