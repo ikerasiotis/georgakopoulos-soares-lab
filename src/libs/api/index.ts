@@ -4,3 +4,7 @@ export * from "./lib/ContactInfo";
 export * from "./lib/TeamPage";
 export * from "./lib/Publications";
 export * from "./lib/ResearchPage";
+export * from "./lib/DatabasePage";
+export * from "./lib/Databases";
+export * from "./lib/ToolsPage";
+export * from "./lib/Tools";

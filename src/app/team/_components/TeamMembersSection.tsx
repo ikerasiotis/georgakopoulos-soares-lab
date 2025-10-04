@@ -10,8 +10,6 @@ type TeamMembersSectionProps = {
 export function TeamMembersSection({ members }: TeamMembersSectionProps) {
   const hasMembers = members.length > 0;
 
-  console.log("Team Members:", members);
-
   return (
     <section
       className="py-16 bg-light research-bg"
@@ -114,6 +112,19 @@ export function TeamMembersSection({ members }: TeamMembersSectionProps) {
                             </a>
                           </div>
                         ) : null}
+                        {member.googleScholar && (
+                          <div className="flex space-x-2">
+                            <a
+                              href={member.googleScholar}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:text-secondary"
+                              aria-label={`Google Scholar profile of ${member.name}`}
+                            >
+                              <FontAwesomeIcon icon={["fas", "graduation-cap"]} />
+                            </a>
+                          </div>
+                        )}
                         {member.linkedin && (
                           <div className="flex space-x-2">
                             <a

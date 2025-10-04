@@ -4,31 +4,25 @@ import { FeaturedPublications } from "./components/Home/FeaturedPublications";
 import { NewsSection } from "./components/Home/NewsSection";
 import { ResearchHighlights } from "./components/Home/ResearchHighlights";
 import { TeamSpotlight } from "./components/Home/TeamSpotlight";
-import {
-  FEATURED_PUBLICATIONS,
-  NEWS_ITEMS,
-  RESEARCH_HIGHLIGHTS,
-  TEAM_PREVIEW,
-} from "./_lib/home-page-data";
-import { getHomepageData } from "@/libs/api";
+import { NEWS_ITEMS, RESEARCH_HIGHLIGHTS } from "./_lib/home-page-data";
+import { getHomePageContent } from "@/libs/api";
 
 export default async function Index() {
-  const homepageData = await getHomepageData();
-
-  const { heroTitle, heroTagline, aboutText, aboutImage } = homepageData || {
-    heroTitle: "Georgakopoulos-Soares Lab",
-    heroTagline: "Decoding Cancer Genomics through Computational Biology",
-    aboutText:
-      "The Georgakopoulos-Soares Laboratory is dedicated to understanding the genomic landscape of cancer through innovative computational approaches and data-driven research.",
-  };
+  const { hero, about, featuredPublications, teamMembers } =
+    await getHomePageContent();
 
   return (
     <div>
-      <HomeHero title={heroTitle} tagline={heroTagline} />
-      <AboutUs aboutText={aboutText} aboutImage={aboutImage} />
+      <HomeHero title={hero.title} tagline={hero.subtitle ?? ""} />
+      <AboutUs
+        heading={about.heading}
+        bodyHtml={about.bodyHtml}
+        imageUrl={about.imageUrl}
+        imageAlt={about.imageAlt}
+      />
       <ResearchHighlights highlights={RESEARCH_HIGHLIGHTS} />
-      <FeaturedPublications publications={FEATURED_PUBLICATIONS} />
-      <TeamSpotlight team={TEAM_PREVIEW} />
+      <FeaturedPublications publications={featuredPublications} />
+      <TeamSpotlight members={teamMembers} />
       <NewsSection news={NEWS_ITEMS} />
     </div>
   );

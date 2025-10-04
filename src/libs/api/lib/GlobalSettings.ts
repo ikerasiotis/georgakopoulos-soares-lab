@@ -1,5 +1,7 @@
 import axios from "axios";
 
+import { buildStrapiUrl } from "./utils";
+
 type StrapiComponent<T> = T & { id?: number };
 
 type StrapiMedia = {
@@ -9,11 +11,32 @@ type StrapiMedia = {
   } | null;
 };
 
-type StrapiNavigationLink = StrapiComponent<
-  NavigationLink & {
-    isVisible?: boolean | null;
-  }
->;
+type StrapiNavigationSubLink = StrapiComponent<{
+  label?: string | null;
+  url?: string | null;
+  openInNewTab?: boolean | null;
+  ariaLabel?: string | null;
+  isVisible?: boolean | null;
+}>;
+
+type StrapiNavigationMenuSection = StrapiComponent<{
+  title?: string | null;
+  links?: StrapiNavigationSubLink[] | null;
+  ctaLabel?: string | null;
+  ctaUrl?: string | null;
+  ctaOpenInNewTab?: boolean | null;
+  ctaAriaLabel?: string | null;
+}>;
+
+type StrapiNavigationLink = StrapiComponent<{
+  label?: string | null;
+  url?: string | null;
+  openInNewTab?: boolean | null;
+  ariaLabel?: string | null;
+  isVisible?: boolean | null;
+  subLinks?: StrapiNavigationSubLink[] | null;
+  megaMenuSections?: StrapiNavigationMenuSection[] | null;
+}>;
 
 type StrapiGlobalSettings = {
   siteName?: string | null;
@@ -47,6 +70,17 @@ export interface NavigationLink {
   openInNewTab?: boolean;
   ariaLabel?: string | null;
   isVisible?: boolean;
+  subLinks?: NavigationLink[];
+  sections?: NavigationSection[];
+}
+
+export interface NavigationSection {
+  title: string;
+  links: NavigationLink[];
+  ctaLabel?: string | null;
+  ctaUrl?: string | null;
+  ctaOpenInNewTab?: boolean;
+  ctaAriaLabel?: string | null;
 }
 
 export interface MediaAsset {
@@ -71,6 +105,37 @@ export interface GlobalSettings {
 
 const FALLBACK_NAVIGATION: NavigationLink[] = [
   { label: "Research", url: "/research", isVisible: true },
+  {
+    label: "Resources",
+    url: "/resources",
+    isVisible: true,
+    subLinks: [
+      { label: "Databases", url: "/resources/databases", isVisible: true },
+      { label: "Software", url: "/resources/software", isVisible: true },
+    ],
+    sections: [
+      {
+        title: "Databases",
+        links: [
+          { label: "DB1", url: "/resources/databases/db1", isVisible: true },
+          { label: "DB2", url: "/resources/databases/db2", isVisible: true },
+          { label: "DB3", url: "/resources/databases/db3", isVisible: true },
+        ],
+        ctaLabel: "Show All Databases",
+        ctaUrl: "/resources/databases",
+      },
+      {
+        title: "Software & Tools",
+        links: [
+          { label: "Tool 1", url: "/resources/software/tool-1", isVisible: true },
+          { label: "Tool 2", url: "/resources/software/tool-2", isVisible: true },
+          { label: "Tool 3", url: "/resources/software/tool-3", isVisible: true },
+        ],
+        ctaLabel: "Show All Tools",
+        ctaUrl: "/resources/software",
+      },
+    ],
+  },
   { label: "Team", url: "/team", isVisible: true },
   { label: "Publications", url: "/publications", isVisible: true },
   { label: "News", url: "/news", isVisible: true },
@@ -109,19 +174,81 @@ function normalizeMedia(media?: StrapiMedia | null): MediaAsset | null {
   };
 }
 
-function normalizeNavigation(
-  links?: StrapiNavigationLink[] | null
+function normalizeSubNavigation(
+  links?: StrapiNavigationSubLink[] | null
 ): NavigationLink[] {
   if (!Array.isArray(links)) return [];
+
   return links
     .filter((link) => link?.label && link?.url && link.isVisible !== false)
     .map((link) => ({
       label: link.label!.trim(),
       url: link.url!.trim(),
       openInNewTab: link.openInNewTab ?? false,
-      ariaLabel: link.ariaLabel ?? null,
+      ariaLabel: link.ariaLabel?.trim() ?? null,
       isVisible: link.isVisible ?? true,
     }));
+}
+
+function normalizeMenuSections(
+  sections?: StrapiNavigationMenuSection[] | null
+): NavigationSection[] {
+  if (!Array.isArray(sections)) {
+    return [];
+  }
+
+  return sections
+    .map((section) => {
+      const title = section.title?.trim();
+      if (!title) {
+        return null;
+      }
+
+      const links = normalizeSubNavigation(section.links);
+
+      if (links.length === 0 && !section.ctaLabel?.trim()) {
+        return null;
+      }
+
+      return {
+        title,
+        links,
+        ctaLabel: section.ctaLabel?.trim() ?? null,
+        ctaUrl: section.ctaUrl?.trim() ?? null,
+        ctaOpenInNewTab: section.ctaOpenInNewTab ?? false,
+        ctaAriaLabel: section.ctaAriaLabel?.trim() ?? null,
+      } satisfies NavigationSection;
+    })
+    .filter((section): section is NavigationSection => Boolean(section));
+}
+
+function normalizeNavigation(
+  links?: StrapiNavigationLink[] | null
+): NavigationLink[] {
+  if (!Array.isArray(links)) return [];
+  return links
+    .filter((link) => link?.label && link?.url && link.isVisible !== false)
+    .map((link) => {
+      const normalized: NavigationLink = {
+        label: link.label!.trim(),
+        url: link.url!.trim(),
+        openInNewTab: link.openInNewTab ?? false,
+        ariaLabel: link.ariaLabel?.trim() ?? null,
+        isVisible: link.isVisible ?? true,
+      };
+
+      const subLinks = normalizeSubNavigation(link.subLinks);
+      if (subLinks.length > 0) {
+        normalized.subLinks = subLinks;
+      }
+
+      const sections = normalizeMenuSections(link.megaMenuSections);
+      if (sections.length > 0) {
+        normalized.sections = sections;
+      }
+
+      return normalized;
+    });
 }
 
 function extractAttributes(
@@ -138,10 +265,30 @@ function extractAttributes(
   return data as StrapiGlobalSettings;
 }
 
+const GLOBAL_SETTINGS_POPULATE = [
+  "logo",
+  "primaryNavigation",
+  "primaryNavigation.subLinks",
+  "primaryNavigation.megaMenuSections",
+  "primaryNavigation.megaMenuSections.links",
+  "utilityNavigation",
+  "utilityNavigation.subLinks",
+  "utilityNavigation.megaMenuSections",
+  "utilityNavigation.megaMenuSections.links",
+  "footerNavigation",
+  "footerNavigation.subLinks",
+  "footerNavigation.megaMenuSections",
+  "footerNavigation.megaMenuSections.links",
+];
+
 export async function getGlobalSettings(): Promise<GlobalSettings> {
   try {
+    const populateQuery = GLOBAL_SETTINGS_POPULATE.map(
+      (field) => `populate=${encodeURIComponent(field)}`
+    ).join("&");
+
     const res = await axios.get<StrapiResponse<StrapiGlobalSettings>>(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/global-setting?populate=logo&populate=primaryNavigation&populate=utilityNavigation&populate=footerNavigation`,
+      buildStrapiUrl(`/global-setting?${populateQuery}`),
       {
         headers: {
           "Content-Type": "application/json",

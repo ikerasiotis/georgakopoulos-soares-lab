@@ -21,6 +21,7 @@ export interface TeamMember {
   portrait?: ImageVariantSet;
   linkedin?: string | null;
   github?: string | null;
+  googleScholar?: string | null;
 }
 
 export interface PrincipalInvestigator {
@@ -86,6 +87,7 @@ type StrapiMember = StrapiComponent<{
   portrait?: StrapiImage | null;
   linkedin?: string | null;
   github?: string | null;
+  googleScholar?: string | null;
 }>;
 
 type StrapiTeamAttributes = {
@@ -482,6 +484,7 @@ function normalizeMembers(members?: StrapiMember[] | null): TeamMember[] {
       portrait: portrait,
       linkedin: member.linkedin?.trim() || null,
       github: member.github?.trim() || null,
+      googleScholar: member.googleScholar?.trim() || null,
     });
   }
 

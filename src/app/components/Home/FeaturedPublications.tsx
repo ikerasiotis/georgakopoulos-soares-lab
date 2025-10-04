@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import type { FeaturedPublication } from "@/app/_lib/home-page-data";
+import type { HomepagePublication } from "@/libs/api";
 
 function PublicationLink({
   href,
@@ -51,7 +51,7 @@ function PublicationLink({
 export function FeaturedPublications({
   publications,
 }: {
-  publications: FeaturedPublication[];
+  publications: HomepagePublication[];
 }) {
   return (
     <section className="py-16" aria-labelledby="featured-publications">
@@ -65,8 +65,9 @@ export function FeaturedPublications({
           </h2>
           <div className="section-divider mb-12" />
 
-          <div className="space-y-6">
-            {publications.map((publication) => (
+          {publications.length > 0 ? (
+            <div className="space-y-6">
+              {publications.map((publication) => (
               <article
                 key={publication.title}
                 className="bg-white p-6 rounded-lg shadow-md transition-colors"
@@ -74,16 +75,25 @@ export function FeaturedPublications({
                 <h3 className="text-xl font-semibold mb-2 text-slate-900">
                   {publication.title}
                 </h3>
-                <p className="text-gray-600 mb-2">{publication.venue}</p>
-                <p className="text-gray-700 mb-4">{publication.authors}</p>
+                {publication.venue ? (
+                  <p className="text-gray-600 mb-2">{publication.venue}</p>
+                ) : null}
+                {publication.authors ? (
+                  <p className="text-gray-700 mb-4">{publication.authors}</p>
+                ) : null}
                 <div className="flex flex-wrap gap-3">
                   {publication.links.map((link) => (
                     <PublicationLink key={link.label} {...link} />
                   ))}
                 </div>
               </article>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-gray-600">
+              Publications will be added soon.
+            </p>
+          )}
 
           <div className="flex justify-center mt-8">
             <Link
