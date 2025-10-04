@@ -1,6 +1,7 @@
 import type { MethodItem } from "../_lib/research-data";
 
 interface ResearchMethodsProps {
+  title: string;
   methods: MethodItem[];
 }
 
@@ -12,14 +13,12 @@ function methodAccentClasses(accent: MethodItem["accent"]) {
     : { bg: "bg-accent/10", text: "text-accent" };
 }
 
-export function ResearchMethods({ methods }: ResearchMethodsProps) {
+export function ResearchMethods({ title, methods }: ResearchMethodsProps) {
   return (
     <section className="py-16">
       <div className="container mx-auto px-4">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-bold mb-4 text-center">
-            Our Methods &amp; Technologies
-          </h2>
+          <h2 className="text-3xl font-bold mb-4 text-center">{title}</h2>
           <div className="section-divider mb-12" />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

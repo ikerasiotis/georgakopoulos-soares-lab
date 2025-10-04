@@ -61,11 +61,16 @@ type StrapiResource = {
 type StrapiResearchAttributes = {
   heroTitle?: string | null;
   heroSubtitle?: string | null;
+  approachTitle?: string | null;
   approachParagraphs?: StrapiParagraph[] | null;
   approachHighlights?: StrapiHighlight[] | null;
   focusAreas?: StrapiFocusArea[] | null;
+  focusTitle?: string | null;
+  focusProjectsLabel?: string | null;
   methods?: StrapiMethod[] | null;
+  methodsTitle?: string | null;
   resources?: StrapiResource[] | null;
+  resourcesTitle?: string | null;
 };
 
 type StrapiResearchEnvelope = {
@@ -224,10 +229,16 @@ function extractAttributes(
 
 export async function getResearchPageContent(): Promise<ResearchContent> {
   try {
+    const params = new URLSearchParams();
+    params.set("populate[approachParagraphs]", "*");
+    params.set("populate[approachHighlights]", "*");
+    params.set("populate[focusAreas][populate][projects]", "*");
+    params.set("populate[focusAreas][populate][tags]", "*");
+    params.set("populate[methods]", "*");
+    params.set("populate[resources][populate][links]", "*");
+
     const response = await axios.get<StrapiResponse<StrapiResearchEnvelope>>(
-      buildStrapiUrl(
-        "/research-page?populate=heroTitle,heroSubtitle,approachParagraphs,approachHighlights,focusAreas.projects,focusAreas.tags,focusAreas.accent,methods.accent,resources.links,resources.accent"
-      ),
+      buildStrapiUrl(`/research-page?${params.toString()}`),
       {
         headers: {
           "Content-Type": "application/json",
@@ -246,6 +257,9 @@ export async function getResearchPageContent(): Promise<ResearchContent> {
       attributes.heroTitle?.trim() || FALLBACK_RESEARCH_CONTENT.heroTitle;
     const heroSubtitle =
       attributes.heroSubtitle?.trim() || FALLBACK_RESEARCH_CONTENT.heroSubtitle;
+    const approachTitle =
+      attributes.approachTitle?.trim() ||
+      FALLBACK_RESEARCH_CONTENT.approachTitle;
 
     const approachParagraphs = normalizeParagraphs(
       attributes.approachParagraphs
@@ -256,10 +270,22 @@ export async function getResearchPageContent(): Promise<ResearchContent> {
     const focusAreas = normalizeFocusAreas(attributes.focusAreas);
     const methods = normalizeMethods(attributes.methods);
     const resources = normalizeResources(attributes.resources);
+    const focusTitle =
+      attributes.focusTitle?.trim() || FALLBACK_RESEARCH_CONTENT.focusTitle;
+    const focusProjectsLabel =
+      attributes.focusProjectsLabel?.trim() ||
+      FALLBACK_RESEARCH_CONTENT.focusProjectsLabel;
+    const methodsTitle =
+      attributes.methodsTitle?.trim() ||
+      FALLBACK_RESEARCH_CONTENT.methodsTitle;
+    const resourcesTitle =
+      attributes.resourcesTitle?.trim() ||
+      FALLBACK_RESEARCH_CONTENT.resourcesTitle;
 
     return {
       heroTitle,
       heroSubtitle,
+      approachTitle,
       approachParagraphs:
         approachParagraphs.length > 0
           ? approachParagraphs
@@ -268,11 +294,15 @@ export async function getResearchPageContent(): Promise<ResearchContent> {
         approachHighlights.length > 0
           ? approachHighlights
           : FALLBACK_RESEARCH_CONTENT.approachHighlights,
+      focusTitle,
+      focusProjectsLabel,
       focusAreas:
         focusAreas.length > 0
           ? focusAreas
           : FALLBACK_RESEARCH_CONTENT.focusAreas,
+      methodsTitle,
       methods: methods.length > 0 ? methods : FALLBACK_RESEARCH_CONTENT.methods,
+      resourcesTitle,
       resources:
         resources.length > 0 ? resources : FALLBACK_RESEARCH_CONTENT.resources,
     } satisfies ResearchContent;

@@ -1,6 +1,7 @@
 import type { HighlightCard } from "../_lib/research-data";
 
 interface ResearchApproachProps {
+  title: string;
   paragraphs: string[];
   highlights: HighlightCard[];
 }
@@ -32,6 +33,7 @@ function AccentIcon({ accent }: { accent: HighlightCard["accent"] }) {
 }
 
 export function ResearchApproach({
+  title,
   paragraphs,
   highlights,
 }: ResearchApproachProps) {
@@ -41,9 +43,7 @@ export function ResearchApproach({
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col md:flex-row gap-12 items-center">
             <div className="md:w-1/2">
-              <h2 className="text-3xl font-bold mb-4 text-primary">
-                Our Approach
-              </h2>
+              <h2 className="text-3xl font-bold mb-4 text-primary">{title}</h2>
               <div className="h-1 w-20 bg-secondary mb-6" />
               {paragraphs.map((paragraph) => (
                 <p key={paragraph.slice(0, 32)} className="text-lg mb-4">

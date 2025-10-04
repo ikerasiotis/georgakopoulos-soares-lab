@@ -23,12 +23,20 @@ export default async function ResearchPage() {
         subtitle={content.heroSubtitle}
       />
       <ResearchApproach
+        title={content.approachTitle}
         paragraphs={content.approachParagraphs}
         highlights={content.approachHighlights}
       />
-      <ResearchFocusAreas focusAreas={content.focusAreas} />
-      <ResearchMethods methods={content.methods} />
-      <ResearchResources resources={content.resources} />
+      <ResearchFocusAreas
+        title={content.focusTitle}
+        projectsLabel={content.focusProjectsLabel}
+        focusAreas={content.focusAreas}
+      />
+      <ResearchMethods title={content.methodsTitle} methods={content.methods} />
+      <ResearchResources
+        title={content.resourcesTitle}
+        resources={content.resources}
+      />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import type { ResourceItem } from "../_lib/research-data";
 
 interface ResearchResourcesProps {
+  title: string;
   resources: ResourceItem[];
 }
 
@@ -12,14 +13,12 @@ function resourceAccentClasses(accent: ResourceItem["accent"]) {
     : { bg: "bg-accent/10", text: "text-accent" };
 }
 
-export function ResearchResources({ resources }: ResearchResourcesProps) {
+export function ResearchResources({ title, resources }: ResearchResourcesProps) {
   return (
     <section className="py-16 bg-light">
       <div className="container mx-auto px-4">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-bold mb-4 text-center">
-            Software &amp; Resources
-          </h2>
+          <h2 className="text-3xl font-bold mb-4 text-center">{title}</h2>
           <div className="section-divider mb-12" />
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

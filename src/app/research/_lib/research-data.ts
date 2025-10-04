@@ -30,10 +30,15 @@ export interface ResourceItem {
 export interface ResearchContent {
   heroTitle: string;
   heroSubtitle: string;
+  approachTitle: string;
   approachParagraphs: string[];
   approachHighlights: HighlightCard[];
+  focusTitle: string;
+  focusProjectsLabel: string;
   focusAreas: FocusArea[];
+  methodsTitle: string;
   methods: MethodItem[];
+  resourcesTitle: string;
   resources: ResourceItem[];
 }
 
@@ -190,9 +195,14 @@ export const FALLBACK_RESEARCH_CONTENT: ResearchContent = {
   heroTitle: "Research Areas",
   heroSubtitle:
     "Exploring the genomic landscape of cancer through computational approaches",
+  approachTitle: "Our Approach",
   approachParagraphs: APPROACH_PARAGRAPHS,
   approachHighlights: APPROACH_HIGHLIGHTS,
+  focusTitle: "Research Focus Areas",
+  focusProjectsLabel: "Key Projects",
   focusAreas: FOCUS_AREAS,
+  methodsTitle: "Our Methods & Technologies",
   methods: METHOD_ITEMS,
+  resourcesTitle: "Software & Resources",
   resources: RESOURCE_ITEMS,
 };

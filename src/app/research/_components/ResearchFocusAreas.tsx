@@ -1,6 +1,8 @@
 import type { FocusArea } from "../_lib/research-data";
 
 interface ResearchFocusAreasProps {
+  title: string;
+  projectsLabel: string;
   focusAreas: FocusArea[];
 }
 
@@ -34,14 +36,16 @@ function AccentCircle({ accent }: { accent: FocusArea["accent"] }) {
   );
 }
 
-export function ResearchFocusAreas({ focusAreas }: ResearchFocusAreasProps) {
+export function ResearchFocusAreas({
+  title,
+  projectsLabel,
+  focusAreas,
+}: ResearchFocusAreasProps) {
   return (
     <section className="py-16 bg-light research-bg">
       <div className="container mx-auto px-4">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-bold mb-4 text-center">
-            Research Focus Areas
-          </h2>
+          <h2 className="text-3xl font-bold mb-4 text-center">{title}</h2>
           <div className="section-divider mb-12" />
 
           {focusAreas.map((area) => (
@@ -78,7 +82,8 @@ export function ResearchFocusAreas({ focusAreas }: ResearchFocusAreasProps) {
                           : "text-accent"
                       }`}
                     >
-                      Key Projects:
+                      {projectsLabel}
+                      {projectsLabel.endsWith(":") ? "" : ":"}
                     </h4>
                     <ul className="list-disc pl-5 space-y-2 text-gray-700">
                       {area.projects.map((project) => (
