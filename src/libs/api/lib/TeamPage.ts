@@ -43,6 +43,9 @@ export interface TeamPageContent {
   heroSubtitle: string;
   principalInvestigator: PrincipalInvestigator;
   members: TeamMember[];
+  membersSectionTitle: string;
+  pastMembersSectionTitle: string;
+  pastMembers: TeamMember[];
 }
 
 type StrapiComponent<T> = T & { id?: number };
@@ -100,6 +103,9 @@ type StrapiTeamAttributes = {
   principalInvestigatorSocialLinks?: StrapiSocialLink[] | null;
   principalInvestigatorPortrait?: StrapiImage | null;
   members?: StrapiMember[] | null;
+  membersSectionTitle?: string | null;
+  pastMembersSectionTitle?: string | null;
+  pastMembers?: StrapiMember[] | null;
 };
 
 type StrapiDataEnvelope<T extends object> =
@@ -265,6 +271,27 @@ const fallbackTeamMembers: TeamMember[] = [
   },
 ];
 
+const fallbackPastMembers: TeamMember[] = [
+  {
+    name: "Alexis Martinez",
+    role: "Postdoctoral Fellow (2020-2024)",
+    focus: "Computational Genomics",
+    affiliation: "Now at Broad Institute",
+    bio: "Alexis led the development of cross-cohort mutational signature models and continues to collaborate with the lab on genomic instability projects.",
+    email: null,
+    photoUrl: null,
+  },
+  {
+    name: "Priya Desai",
+    role: "Research Scientist (2018-2023)",
+    focus: "Cancer Epigenomics",
+    affiliation: "Now at Genentech",
+    bio: "Priya pioneered our chromatin accessibility pipelines and contributed to foundational work on non-B DNA structures.",
+    email: null,
+    photoUrl: null,
+  },
+];
+
 const fallbackTeamPage: TeamPageContent = {
   heroTitle: "Our Team",
   heroSubtitle:
@@ -307,6 +334,9 @@ const fallbackTeamPage: TeamPageContent = {
     portrait: FALLBACK_PI_PORTRAIT,
   },
   members: fallbackTeamMembers,
+  membersSectionTitle: "Meet our Team",
+  pastMembersSectionTitle: "Past Members",
+  pastMembers: fallbackPastMembers,
 };
 
 function toParagraphs(value?: string | null): string[] {
@@ -451,9 +481,14 @@ function normalizeEducation(
     : fallbackTeamPage.principalInvestigator.education;
 }
 
-function normalizeMembers(members?: StrapiMember[] | null): TeamMember[] {
-  if (!Array.isArray(members) || members.length === 0) {
-    return fallbackTeamPage.members;
+function normalizeMembers(
+  members?: StrapiMember[] | null,
+  options?: { fallback?: TeamMember[]; allowEmpty?: boolean }
+): TeamMember[] {
+  const fallbackList = options?.fallback ?? fallbackTeamPage.members;
+
+  if (!Array.isArray(members)) {
+    return fallbackList;
   }
 
   const normalized: TeamMember[] = [];
@@ -488,7 +523,11 @@ function normalizeMembers(members?: StrapiMember[] | null): TeamMember[] {
     });
   }
 
-  return normalized.length > 0 ? normalized : fallbackTeamPage.members;
+  if (normalized.length > 0) {
+    return normalized;
+  }
+
+  return options?.allowEmpty ? [] : fallbackList;
 }
 
 function extractAttributes<T extends object>(
@@ -534,14 +573,24 @@ function normalizeTeamResponse(raw: StrapiTeamAttributes): TeamPageContent {
       socialLinks: normalizeSocialLinks(raw.principalInvestigatorSocialLinks),
       portrait,
     },
+    membersSectionTitle:
+      raw.membersSectionTitle?.trim() ||
+      fallbackTeamPage.membersSectionTitle,
+    pastMembersSectionTitle:
+      raw.pastMembersSectionTitle?.trim() ||
+      fallbackTeamPage.pastMembersSectionTitle,
     members: normalizeMembers(raw.members),
+    pastMembers: normalizeMembers(raw.pastMembers, {
+      fallback: fallbackTeamPage.pastMembers,
+      allowEmpty: true,
+    }),
   };
 }
 
 export async function getTeamPageContent(): Promise<TeamPageContent> {
   try {
     const response = await axios.get<StrapiResponse<StrapiTeamAttributes>>(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/team-page?populate[principalInvestigatorEducation]=true&populate[principalInvestigatorSocialLinks]=true&populate[principalInvestigatorPortrait]=true&populate[members][populate]=*`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/team-page?populate[principalInvestigatorEducation]=true&populate[principalInvestigatorSocialLinks]=true&populate[principalInvestigatorPortrait]=true&populate[members][populate]=*&populate[pastMembers][populate]=*`,
       {
         headers: {
           "Content-Type": "application/json",

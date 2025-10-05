@@ -4,28 +4,47 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { TeamMember } from "@/libs/api";
 
 type TeamMembersSectionProps = {
+  title: string;
+  headingId: string;
   members: TeamMember[];
+  emptyMessage?: string;
+  hideWhenEmpty?: boolean;
+  variant?: "default" | "minimal";
 };
 
-export function TeamMembersSection({ members }: TeamMembersSectionProps) {
+export function TeamMembersSection({
+  title,
+  headingId,
+  members,
+  emptyMessage = "Team profiles will be available soon.",
+  hideWhenEmpty = false,
+  variant = "default",
+}: TeamMembersSectionProps) {
   const hasMembers = members.length > 0;
 
+  if (!hasMembers && hideWhenEmpty) {
+    return null;
+  }
+
   return (
-    <section
-      className="py-16 bg-light research-bg"
-      aria-labelledby="team-members-heading"
-    >
+    <section className="py-16 bg-light research-bg" aria-labelledby={headingId}>
       <div className="container mx-auto px-4">
         <div className="max-w-6xl mx-auto">
           <h2
-            id="team-members-heading"
-            className="text-3xl font-bold mb-4 text-center"
+            id={headingId}
+            className="text-3xl font-bold mb-4 text-center text-primary"
           >
-            Meet our Team
+            {title}
           </h2>
 
           {hasMembers ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div
+              className={
+                variant === "minimal"
+                  ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6"
+                  : "grid grid-cols-1 md:grid-cols-3 gap-6"
+              }
+            >
               {members.map((member) => {
                 const portraitSrc =
                   member.portrait?.small ??
@@ -38,6 +57,54 @@ export function TeamMembersSection({ members }: TeamMembersSectionProps) {
 
                 const portraitAlt =
                   member.portrait?.alt ?? `${member.name} portrait`;
+
+                if (variant === "minimal") {
+                  return (
+                    <article
+                      key={member.name}
+                      className="flex flex-col items-center bg-white rounded-lg shadow-sm border border-slate-200 p-4"
+                      aria-labelledby={`team-member-${member.name}`}
+                    >
+                      <div className="relative mb-4 h-24 w-24 overflow-hidden rounded-full bg-primary/10">
+                        {portraitSrc ? (
+                          <Image
+                            src={portraitSrc}
+                            alt={portraitAlt}
+                            fill
+                            className="object-cover"
+                            sizes="96px"
+                          />
+                        ) : (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="absolute inset-0 h-full w-full text-primary/40 p-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            role="img"
+                            aria-label={`${member.name} avatar placeholder`}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="1"
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            />
+                          </svg>
+                        )}
+                      </div>
+                      <div className="text-center">
+                        <h3
+                          id={`team-member-${member.name}`}
+                          className="text-base font-semibold text-slate-900"
+                        >
+                          {member.name}
+                        </h3>
+                        <p className="text-sm text-slate-600">{member.role}</p>
+                      </div>
+                    </article>
+                  );
+                }
 
                 return (
                   <article
@@ -121,7 +188,9 @@ export function TeamMembersSection({ members }: TeamMembersSectionProps) {
                               className="text-primary hover:text-secondary"
                               aria-label={`Google Scholar profile of ${member.name}`}
                             >
-                              <FontAwesomeIcon icon={["fas", "graduation-cap"]} />
+                              <FontAwesomeIcon
+                                icon={["fas", "graduation-cap"]}
+                              />
                             </a>
                           </div>
                         )}
@@ -158,9 +227,7 @@ export function TeamMembersSection({ members }: TeamMembersSectionProps) {
               })}
             </div>
           ) : (
-            <p className="text-center text-gray-600">
-              Team profiles will be available soon.
-            </p>
+            <p className="text-center text-gray-600">{emptyMessage}</p>
           )}
         </div>
       </div>

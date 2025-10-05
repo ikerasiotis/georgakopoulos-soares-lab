@@ -15,8 +15,15 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function TeamPage() {
-  const { heroTitle, heroSubtitle, principalInvestigator, members } =
-    await getTeamPageContent();
+  const {
+    heroTitle,
+    heroSubtitle,
+    principalInvestigator,
+    members,
+    membersSectionTitle,
+    pastMembers,
+    pastMembersSectionTitle,
+  } = await getTeamPageContent();
 
   const resolvePortraitSrc = (
     portrait?: ImageVariantSet | null
@@ -40,13 +47,29 @@ export default async function TeamPage() {
     photoUrl: resolvePortraitSrc(member.portrait ?? null) ?? member.photoUrl,
   }));
 
+  const resolvedPastMembers: TeamMember[] = pastMembers.map((member) => ({
+    ...member,
+    photoUrl: resolvePortraitSrc(member.portrait ?? null) ?? member.photoUrl,
+  }));
+
   return (
     <div>
       <TeamHero title={heroTitle} subtitle={heroSubtitle} />
       <PrincipalInvestigatorCard
         principalInvestigator={resolvedPrincipalInvestigator}
       />
-      <TeamMembersSection members={resolvedMembers} />
+      <TeamMembersSection
+        title={membersSectionTitle}
+        headingId="team-members-heading"
+        members={resolvedMembers}
+      />
+      <TeamMembersSection
+        title={pastMembersSectionTitle}
+        headingId="past-team-members-heading"
+        members={resolvedPastMembers}
+        hideWhenEmpty
+        variant="minimal"
+      />
     </div>
   );
 }
