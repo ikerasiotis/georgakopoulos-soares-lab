@@ -3,9 +3,6 @@ type ContactMapProps = {
   mapLinkUrl?: string | null;
 };
 
-const DEFAULT_MAP_EMBED =
-  "https://maps.google.com/maps?q=Dell%20Pediatric%20Research%20Institute%201400%20Barbara%20Jordan%20Blvd%20Austin%20TX%2078723&output=embed";
-
 function buildEmbedUrl(mapEmbedUrl?: string | null, mapLinkUrl?: string | null) {
   const candidate = mapEmbedUrl || mapLinkUrl;
   if (!candidate) {
@@ -48,8 +45,11 @@ function buildEmbedUrl(mapEmbedUrl?: string | null, mapLinkUrl?: string | null) 
 
 export function ContactMap({ mapEmbedUrl, mapLinkUrl }: ContactMapProps) {
   const headingId = "contact-map-heading";
-  const normalizedEmbedUrl =
-    buildEmbedUrl(mapEmbedUrl, mapLinkUrl) || DEFAULT_MAP_EMBED;
+  const normalizedEmbedUrl = buildEmbedUrl(mapEmbedUrl, mapLinkUrl);
+
+  if (!normalizedEmbedUrl && !mapLinkUrl) {
+    return null;
+  }
 
   return (
     <section
@@ -60,15 +60,17 @@ export function ContactMap({ mapEmbedUrl, mapLinkUrl }: ContactMapProps) {
         Find Us
       </h2>
       <div className="map-responsive">
-        <iframe
-          title="Georgakopoulos-Soares Lab location map"
-          src={normalizedEmbedUrl}
-          loading="lazy"
-          allowFullScreen
-          aria-label="Map showing the Georgakopoulos-Soares Lab location"
-          className="w-full h-64 md:h-80 border-0"
-        />
-        {mapLinkUrl && (
+        {normalizedEmbedUrl ? (
+          <iframe
+            title="Georgakopoulos-Soares Lab location map"
+            src={normalizedEmbedUrl}
+            loading="lazy"
+            allowFullScreen
+            aria-label="Map showing the Georgakopoulos-Soares Lab location"
+            className="w-full h-64 md:h-80 border-0"
+          />
+        ) : null}
+        {mapLinkUrl ? (
           <div className="text-center py-4">
             <a
               href={mapLinkUrl}
@@ -80,7 +82,7 @@ export function ContactMap({ mapEmbedUrl, mapLinkUrl }: ContactMapProps) {
               Open in Google Maps
             </a>
           </div>
-        )}
+        ) : null}
       </div>
     </section>
   );

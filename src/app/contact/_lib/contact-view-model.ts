@@ -19,7 +19,7 @@ export interface ContactViewModel {
   heroTitle: string;
   heroSubtitle?: string | null;
   addressLines: string[];
-  email: string;
+  email?: string;
   phones: ContactPhone[];
   officeHourLines: string[];
   socialLinks: SocialLink[];
@@ -127,7 +127,7 @@ export function buildContactViewModel(contact: ContactInfo): ContactViewModel {
     heroTitle: contact.heroTitle,
     heroSubtitle: contact.heroSubtitle,
     addressLines,
-    email: contact.email,
+    email: contact.email ?? undefined,
     phones,
     officeHourLines,
     socialLinks,
@@ -206,4 +206,3 @@ export function buildContactStructuredData(contact: ContactInfo) {
     })
   );
 }
-

@@ -21,13 +21,13 @@ type StrapiResponse<T extends object> = {
 export interface ContactInfo {
   heroTitle: string;
   heroSubtitle?: string | null;
-  department: string;
-  institution: string;
-  addressLine: string;
-  city: string;
-  state: string;
-  postalCode: string;
-  email: string;
+  department?: string | null;
+  institution?: string | null;
+  addressLine?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postalCode?: string | null;
+  email?: string | null;
   labPhone?: string | null;
   officePhone?: string | null;
   officeHoursWeekdays?: string | null;
@@ -79,10 +79,18 @@ function extractAttributes(
   return data as StrapiContactInfo;
 }
 
+function normalize(value?: string | null): string | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 export async function getContactInfo(): Promise<ContactInfo> {
   try {
     const res = await axios.get<StrapiResponse<StrapiContactInfo>>(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/contact-info`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/contact-info?populate=*`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -94,14 +102,32 @@ export async function getContactInfo(): Promise<ContactInfo> {
     const attributes = extractAttributes(res.data?.data);
 
     if (attributes && Object.keys(attributes).length > 0) {
-      const filteredEntries = Object.entries(attributes).filter(
-        ([, value]) => value !== undefined && value !== null && value !== ""
-      );
-
       return {
-        ...fallbackContactInfo,
-        ...Object.fromEntries(filteredEntries),
-      } as ContactInfo;
+        heroTitle:
+          normalize(attributes.heroTitle) ?? fallbackContactInfo.heroTitle,
+        heroSubtitle: normalize(attributes.heroSubtitle) ?? null,
+        department: normalize(attributes.department) ?? undefined,
+        institution: normalize(attributes.institution) ?? undefined,
+        addressLine: normalize(attributes.addressLine) ?? undefined,
+        city: normalize(attributes.city) ?? undefined,
+        state: normalize(attributes.state) ?? undefined,
+        postalCode: normalize(attributes.postalCode) ?? undefined,
+        email: normalize(attributes.email) ?? undefined,
+        labPhone: normalize(attributes.labPhone) ?? undefined,
+        officePhone: normalize(attributes.officePhone) ?? undefined,
+        officeHoursWeekdays:
+          normalize(attributes.officeHoursWeekdays) ?? undefined,
+        officeHoursWeekend:
+          normalize(attributes.officeHoursWeekend) ?? undefined,
+        twitterUrl: normalize(attributes.twitterUrl) ?? undefined,
+        linkedinUrl: normalize(attributes.linkedinUrl) ?? undefined,
+        githubUrl: normalize(attributes.githubUrl) ?? undefined,
+        googleScholarUrl:
+          normalize(attributes.googleScholarUrl) ?? undefined,
+        pubmedUrl: normalize(attributes.pubmedUrl) ?? undefined,
+        mapEmbedUrl: normalize(attributes.mapEmbedUrl) ?? undefined,
+        mapLinkUrl: normalize(attributes.mapLinkUrl) ?? undefined,
+      } satisfies ContactInfo;
     }
   } catch (err) {
     console.error("Error fetching contact info:", err);
