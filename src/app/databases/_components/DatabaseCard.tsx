@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { DatabaseResource } from "@/libs/api";
 
 interface DatabaseCardProps {
@@ -12,7 +13,11 @@ interface DatabaseCardProps {
   };
 }
 
-export function DatabaseCard({ database, position, labels }: DatabaseCardProps) {
+export function DatabaseCard({
+  database,
+  position,
+  labels,
+}: DatabaseCardProps) {
   const cardId = `database-${position}`;
   const descriptionId = `${cardId}-description`;
   const keywordsId = `${cardId}-keywords`;
@@ -34,21 +39,34 @@ export function DatabaseCard({ database, position, labels }: DatabaseCardProps) 
       aria-describedby={describedBy || undefined}
       className="group relative flex h-full flex-col space-y-4 rounded-2xl border border-slate-200/80 bg-white/95 p-8 shadow-sm shadow-[0_15px_40px_-20px_rgba(15,23,42,0.35)] ring-1 ring-transparent transition-all duration-200 focus-within:-translate-y-1 focus-within:shadow-[0_30px_60px_-25px_rgba(15,23,42,0.4)] focus-within:ring-primary/20 hover:-translate-y-1 hover:shadow-[0_30px_60px_-25px_rgba(15,23,42,0.4)] hover:ring-primary/20"
     >
-      <header className="mt-4 flex flex-col gap-4">
-        <h3
-          id={`${cardId}-title`}
-          className="text-2xl font-semibold leading-tight text-slate-900"
-        >
-          {database.title}
-        </h3>
-        {database.description ? (
-          <p
-            id={descriptionId}
-            className="text-base leading-relaxed text-slate-700"
+      <header className="mt-4 flex flex-col md:flex-row gap-6 items-start md:items-center">
+        {database.thumbnail && (
+          <div className="flex-shrink-0 md:w-44">
+            <Image
+              src={database.thumbnail}
+              alt={database.title}
+              width={180}
+              height={180}
+              className="rounded-xl object-cover shadow-md border border-slate-100"
+            />
+          </div>
+        )}
+        <div className="flex-1 flex flex-col gap-4">
+          <h3
+            id={`${cardId}-title`}
+            className="text-2xl font-semibold leading-tight text-slate-900"
           >
-            {database.description}
-          </p>
-        ) : null}
+            {database.title}
+          </h3>
+          {database.description ? (
+            <p
+              id={descriptionId}
+              className="text-base leading-relaxed text-slate-700"
+            >
+              {database.description}
+            </p>
+          ) : null}
+        </div>
       </header>
 
       {database.keywords.length > 0 ? (

@@ -35,7 +35,7 @@ export default async function ToolsPage() {
       <section className="bg-white py-16">
         <div className="container mx-auto px-4">
           <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-secondary">
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-primary">
               {pageContent.heroEyebrow}
             </p>
             <h1 className="mt-4 text-4xl font-bold text-slate-900">

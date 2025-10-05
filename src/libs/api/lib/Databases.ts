@@ -2,6 +2,21 @@ import axios from "axios";
 
 import { buildStrapiUrl } from "./utils";
 
+type StrapiImageFormat = {
+  url?: string | null;
+};
+
+type StrapiImage = {
+  url?: string | null;
+  alternativeText?: string | null;
+  formats?: {
+    thumbnail?: StrapiImageFormat | null;
+    small?: StrapiImageFormat | null;
+    medium?: StrapiImageFormat | null;
+    large?: StrapiImageFormat | null;
+  } | null;
+};
+
 type StrapiDatabaseAttributes = {
   title?: string | null;
   description?: string | null;
@@ -9,6 +24,7 @@ type StrapiDatabaseAttributes = {
   keypoints?: string[] | null;
   estEntries?: string[] | null;
   link?: string | null;
+  thumbnail?: StrapiImage | null;
 };
 
 type StrapiDatabaseEnvelope = {
@@ -29,6 +45,7 @@ export interface DatabaseResource {
   keypoints: string[];
   estEntries: string[];
   link?: string;
+  thumbnail?: string;
 }
 
 const FALLBACK_DATABASES: DatabaseResource[] = [
@@ -59,7 +76,8 @@ const FALLBACK_DATABASES: DatabaseResource[] = [
   },
   {
     id: "fallback-microsatellites",
-    title: "Microsatellites Explorer: A database of short tandem repeats across genomes",
+    title:
+      "Microsatellites Explorer: A database of short tandem repeats across genomes",
     description:
       "Microsatellites Explorer compiles short tandem repeats (STRs, microsatellites) from more than 117,000 genomes. STRs are repetitive DNA elements that are important markers for population genetics, forensics, and evolutionary biology. The platform provides a searchable interface and supports statistical and comparative analysis of STR distribution.",
     keywords: [
@@ -106,7 +124,56 @@ function normalizeStringArray(value?: string[] | null): string[] {
     return [];
   }
 
-  return value.map((item) => item?.trim()).filter((item): item is string => Boolean(item));
+  return value
+    .map((item) => item?.trim())
+    .filter((item): item is string => Boolean(item));
+}
+
+function normalizeUrl(path?: string | null): string | null {
+  if (!path) {
+    return null;
+  }
+  if (path.startsWith("http")) {
+    return path;
+  }
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (!baseUrl) {
+    return normalizedPath;
+  }
+  return `${baseUrl}${normalizedPath}`;
+}
+
+/**
+ * Returns an object with image variants (url, thumbnail, small, medium, large, alt)
+ * from a StrapiImage object.
+ * The url property is prioritized as: medium > large > small > thumbnail > base url.
+ */
+function buildImageVariants(image?: StrapiImage | null):
+  | {
+      url: string | null;
+      thumbnail: string | null;
+      small: string | null;
+      medium: string | null;
+      large: string | null;
+      alt: string | null;
+    }
+  | undefined {
+  if (!image) return undefined;
+  return {
+    url:
+      normalizeUrl(image.formats?.medium?.url) ??
+      normalizeUrl(image.formats?.large?.url) ??
+      normalizeUrl(image.formats?.small?.url) ??
+      normalizeUrl(image.formats?.thumbnail?.url) ??
+      normalizeUrl(image.url) ??
+      null,
+    thumbnail: normalizeUrl(image.formats?.thumbnail?.url) ?? null,
+    small: normalizeUrl(image.formats?.small?.url) ?? null,
+    medium: normalizeUrl(image.formats?.medium?.url) ?? null,
+    large: normalizeUrl(image.formats?.large?.url) ?? null,
+    alt: image.alternativeText ?? null,
+  };
 }
 
 function normalizeDatabase(
@@ -120,6 +187,8 @@ function normalizeDatabase(
     return null;
   }
 
+  const imageVariants = buildImageVariants(attributes?.thumbnail);
+
   return {
     id: envelope?.documentId ?? String(envelope?.id ?? title),
     title,
@@ -128,13 +197,14 @@ function normalizeDatabase(
     keypoints: normalizeStringArray(attributes?.keypoints),
     estEntries: normalizeStringArray(attributes?.estEntries),
     link: attributes?.link?.trim() || undefined,
+    thumbnail: imageVariants?.url || undefined,
   } satisfies DatabaseResource;
 }
 
 export async function getDatabases(): Promise<DatabaseResource[]> {
   try {
     const response = await axios.get<StrapiResponse<StrapiDatabaseEnvelope[]>>(
-      buildStrapiUrl("/databases"),
+      buildStrapiUrl("/databases?populate=*"),
       {
         headers: {
           "Content-Type": "application/json",
@@ -142,6 +212,8 @@ export async function getDatabases(): Promise<DatabaseResource[]> {
         },
       }
     );
+
+    console.log("Fetched databases:", JSON.stringify(response.data, null, 2));
 
     const databases = Array.isArray(response.data?.data)
       ? response.data?.data

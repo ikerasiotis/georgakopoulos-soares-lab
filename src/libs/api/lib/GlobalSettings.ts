@@ -313,8 +313,6 @@ export async function getGlobalSettings(): Promise<GlobalSettings> {
       }
     );
 
-    console.log("Global Settings Response:", res.data);
-
     const attributes = extractAttributes(res.data?.data);
 
     if (!attributes) {

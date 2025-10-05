@@ -10,7 +10,23 @@ export interface ToolResource {
   keypoints: string[];
   features: string[];
   link?: string;
+  thumbnail?: string;
 }
+
+type StrapiImageFormat = {
+  url?: string | null;
+};
+
+type StrapiImage = {
+  url?: string | null;
+  alternativeText?: string | null;
+  formats?: {
+    thumbnail?: StrapiImageFormat | null;
+    small?: StrapiImageFormat | null;
+    medium?: StrapiImageFormat | null;
+    large?: StrapiImageFormat | null;
+  } | null;
+};
 
 type StrapiToolAttributes = {
   title?: string | null;
@@ -19,6 +35,7 @@ type StrapiToolAttributes = {
   keypoints?: string[] | null;
   features?: string[] | null;
   link?: string | null;
+  thumbnail?: StrapiImage | null;
 };
 
 type StrapiToolEnvelope = {
@@ -34,7 +51,8 @@ type StrapiResponse<T> = {
 const FALLBACK_TOOLS: ToolResource[] = [
   {
     id: "fallback-mafcounter",
-    title: "MAFcounter: An efficient tool for counting the occurrences of k-mers in MAF files",
+    title:
+      "MAFcounter: An efficient tool for counting the occurrences of k-mers in MAF files",
     description:
       "MAFcounter is the first k-mer counting tool specifically designed to operate on alignment files in the MAF (Multiple Alignment Format). It supports DNA and protein alignments, is multithreaded, fast and memory-efficient, and offers a versatile set of features for k-mer analysis directly in alignment context.",
     keywords: [
@@ -61,7 +79,8 @@ const FALLBACK_TOOLS: ToolResource[] = [
   },
   {
     id: "fallback-zseeker",
-    title: "ZSeeker: An optimized algorithm for Z-DNA detection in genomic sequences",
+    title:
+      "ZSeeker: An optimized algorithm for Z-DNA detection in genomic sequences",
     description:
       "ZSeeker is a novel computational algorithm designed to identify potential Z-DNA forming sequences within genomic DNA. Z-DNA is an alternative left-handed DNA helix implicated in transcription, replication, repair, and genetic instability.",
     keywords: [
@@ -111,18 +130,66 @@ function normalizeStringArray(value?: string[] | null): string[] {
     return [];
   }
 
-  return value.map((item) => item?.trim()).filter((item): item is string => Boolean(item));
+  return value
+    .map((item) => item?.trim())
+    .filter((item): item is string => Boolean(item));
+}
+
+function normalizeUrl(path?: string | null): string | null {
+  if (!path) {
+    return null;
+  }
+  if (path.startsWith("http")) {
+    return path;
+  }
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (!baseUrl) {
+    return normalizedPath;
+  }
+  return `${baseUrl}${normalizedPath}`;
+}
+
+/**
+ * Returns an object with image variants (url, thumbnail, small, medium, large, alt)
+ * from a StrapiImage object.
+ * The url property is prioritized as: medium > large > small > thumbnail > base url.
+ */
+function buildImageVariants(image?: StrapiImage | null):
+  | {
+      url: string | null;
+      thumbnail: string | null;
+      small: string | null;
+      medium: string | null;
+      large: string | null;
+      alt: string | null;
+    }
+  | undefined {
+  if (!image) return undefined;
+  return {
+    url:
+      normalizeUrl(image.formats?.medium?.url) ??
+      normalizeUrl(image.formats?.large?.url) ??
+      normalizeUrl(image.formats?.small?.url) ??
+      normalizeUrl(image.formats?.thumbnail?.url) ??
+      normalizeUrl(image.url) ??
+      null,
+    thumbnail: normalizeUrl(image.formats?.thumbnail?.url) ?? null,
+    small: normalizeUrl(image.formats?.small?.url) ?? null,
+    medium: normalizeUrl(image.formats?.medium?.url) ?? null,
+    large: normalizeUrl(image.formats?.large?.url) ?? null,
+    alt: image.alternativeText ?? null,
+  };
 }
 
 function normalizeTool(envelope?: StrapiToolEnvelope): ToolResource | null {
   const attributes = extractAttributes(envelope);
 
   const title = attributes?.title?.trim();
-
   if (!title) {
     return null;
   }
-
+  const imageVariants = buildImageVariants(attributes?.thumbnail);
   return {
     id: envelope?.documentId ?? String(envelope?.id ?? title),
     title,
@@ -131,13 +198,14 @@ function normalizeTool(envelope?: StrapiToolEnvelope): ToolResource | null {
     keypoints: normalizeStringArray(attributes?.keypoints),
     features: normalizeStringArray(attributes?.features),
     link: attributes?.link?.trim() || undefined,
+    thumbnail: imageVariants?.url || undefined,
   } satisfies ToolResource;
 }
 
 export async function getTools(): Promise<ToolResource[]> {
   try {
     const response = await axios.get<StrapiResponse<StrapiToolEnvelope[]>>(
-      buildStrapiUrl("/tools"),
+      buildStrapiUrl("/tools?populate=*"),
       {
         headers: {
           "Content-Type": "application/json",
@@ -159,8 +227,11 @@ export async function getTools(): Promise<ToolResource[]> {
   }
 }
 
-export function getToolById(tools: ToolResource[], id: string): ToolResource | undefined {
+export function getToolById(
+  tools: ToolResource[],
+  id: string
+): ToolResource | undefined {
   return tools.find((tool) => tool.id === id);
 }
 
-export { FALLBACK_TOOLS };
+export { FALLBACK_TOOLS, buildImageVariants };
