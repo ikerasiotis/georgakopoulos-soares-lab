@@ -213,8 +213,6 @@ export async function getDatabases(): Promise<DatabaseResource[]> {
       }
     );
 
-    console.log("Fetched databases:", JSON.stringify(response.data, null, 2));
-
     const databases = Array.isArray(response.data?.data)
       ? response.data?.data
       : [];

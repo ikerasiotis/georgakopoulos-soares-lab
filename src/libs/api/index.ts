@@ -8,3 +8,4 @@ export * from "./lib/DatabasePage";
 export * from "./lib/Databases";
 export * from "./lib/ToolsPage";
 export * from "./lib/Tools";
+export * from "./lib/News";

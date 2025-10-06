@@ -574,8 +574,7 @@ function normalizeTeamResponse(raw: StrapiTeamAttributes): TeamPageContent {
       portrait,
     },
     membersSectionTitle:
-      raw.membersSectionTitle?.trim() ||
-      fallbackTeamPage.membersSectionTitle,
+      raw.membersSectionTitle?.trim() || fallbackTeamPage.membersSectionTitle,
     pastMembersSectionTitle:
       raw.pastMembersSectionTitle?.trim() ||
       fallbackTeamPage.pastMembersSectionTitle,
@@ -604,8 +603,6 @@ export async function getTeamPageContent(): Promise<TeamPageContent> {
     if (!attributes) {
       return fallbackTeamPage;
     }
-
-    // console.log("Raw Team Page Attributes:", normalizeTeamResponse(attributes));
 
     return normalizeTeamResponse(attributes);
   } catch (error) {
