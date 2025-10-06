@@ -3,8 +3,11 @@ import Link from "next/link";
 
 import { getNewsArticle, getNewsPageContent } from "@/libs/api";
 
+// Define the props type for the page
 type NewsDetailProps = {
-  params: { slug: string };
+  params: Promise<{
+    slug: string;
+  }>;
 };
 
 function formatDate(dateString: string) {
@@ -20,7 +23,7 @@ function formatDate(dateString: string) {
 }
 
 export default async function NewsDetailPage({ params }: NewsDetailProps) {
-  const { slug } = params;
+  const { slug } = await params;
   const [pageContent, article] = await Promise.all([
     getNewsPageContent(),
     getNewsArticle(slug),
