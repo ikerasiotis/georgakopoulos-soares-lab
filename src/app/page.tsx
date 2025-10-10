@@ -7,6 +7,8 @@ import { TeamSpotlight } from "./components/Home/TeamSpotlight";
 import { NEWS_ITEMS, RESEARCH_HIGHLIGHTS } from "./_lib/home-page-data";
 import { getHomePageContent } from "@/libs/api";
 
+export const dynamic = "force-dynamic";
+
 export default async function Index() {
   const { hero, about, featuredPublications, teamMembers, teamMembersTitle } =
     await getHomePageContent();

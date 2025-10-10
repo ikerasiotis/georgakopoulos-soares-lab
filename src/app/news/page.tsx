@@ -10,6 +10,8 @@ export const metadata: Metadata = {
     "Stay updated with the latest news and announcements from the Georgakopoulos-Soares Laboratory.",
 };
 
+export const dynamic = "force-dynamic";
+
 function parsePage(
   searchParams?: Record<string, string | string[] | undefined>
 ) {

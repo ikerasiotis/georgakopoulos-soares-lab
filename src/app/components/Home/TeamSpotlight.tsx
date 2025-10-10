@@ -12,11 +12,6 @@ export function TeamSpotlight({
   title?: string;
   members: HomepageTeamMember[];
 }) {
-  console.log(
-    "Rendering TeamSpotlight with members:",
-    JSON.stringify(members, null, 2)
-  ); // --- IGNORE ---
-
   return (
     <section className="py-16 bg-light" aria-labelledby="team-spotlight">
       <div className="container mx-auto px-4">
@@ -64,7 +59,7 @@ export function TeamSpotlight({
               Team members will be available soon.
             </p>
           )}
-          <div className="mt-10 text-center">
+          <div className="mt-8 text-center">
             <Link
               href="/team"
               className="inline-flex items-end gap-2 text-primary hover:text-secondary font-medium"

@@ -13,6 +13,8 @@ export const metadata: Metadata = {
     "Explore our research areas in cancer genomics and computational biology.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ResearchPage() {
   const content = await getResearchPageContent();
 

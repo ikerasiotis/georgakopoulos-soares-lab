@@ -24,6 +24,8 @@ export const metadata: Metadata = {
   },
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ToolsPage() {
   const [pageContent, tools] = await Promise.all([
     getToolsPageContent(),

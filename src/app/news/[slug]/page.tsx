@@ -3,6 +3,8 @@ import Link from "next/link";
 
 import { getNewsArticle, getNewsPageContent } from "@/libs/api";
 
+export const dynamic = "force-dynamic";
+
 // Define the props type for the page
 type NewsDetailProps = {
   params: Promise<{
