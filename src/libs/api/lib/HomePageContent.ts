@@ -3,16 +3,24 @@ import axios from "axios";
 import { getPublications } from "./Publications";
 import { getTeamPageContent } from "./TeamPage";
 
+type StrapiImageFormats = Record<string, { url?: string | null }> | null;
+
 type StrapiImageFile = {
   url?: string | null;
   alternativeText?: string | null;
+  formats?: StrapiImageFormats;
 };
 
-type StrapiImage = {
-  data?: {
-    attributes?: StrapiImageFile | null;
-  } | null;
-};
+type StrapiImage =
+  | {
+      data?: {
+        attributes?: StrapiImageFile | null;
+      } | null;
+    }
+  | (StrapiImageFile & {
+      id?: number;
+      documentId?: string;
+    });
 
 type StrapiHomePageAttributes = {
   heroTitle?: string | null;
@@ -57,6 +65,9 @@ export interface HomepageTeamMember {
   name: string;
   photoUrl?: string | null;
   photoAlt?: string | null;
+  role?: string | null;
+  affiliation?: string | null;
+  focus?: string | null;
 }
 
 export interface HomePageContent {
@@ -72,6 +83,7 @@ export interface HomePageContent {
   };
   featuredPublications: HomepagePublication[];
   teamMembers: HomepageTeamMember[];
+  teamMembersTitle: string;
 }
 
 const FALLBACK_HOME_PAGE: HomePageContent = {
@@ -88,6 +100,7 @@ const FALLBACK_HOME_PAGE: HomePageContent = {
   },
   featuredPublications: [],
   teamMembers: [],
+  teamMembersTitle: "Meet Our Team",
 };
 
 function resolveMediaUrl(image?: StrapiImage | null): {
@@ -95,7 +108,22 @@ function resolveMediaUrl(image?: StrapiImage | null): {
   alt: string | null;
 } {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
-  const attributes = image?.data?.attributes;
+
+  const attributes: StrapiImageFile | undefined = (() => {
+    if (!image) return undefined;
+    if ("data" in image) {
+      return image.data?.attributes ?? undefined;
+    }
+    // If image is not an envelope, it should be StrapiImageFile
+    if (
+      typeof image === "object" &&
+      ("url" in image || "alternativeText" in image || "formats" in image)
+    ) {
+      return image as StrapiImageFile;
+    }
+    return undefined;
+  })();
+
   const relativeUrl = attributes?.url ?? null;
   const absoluteUrl = relativeUrl
     ? relativeUrl.startsWith("http")
@@ -222,9 +250,31 @@ export async function getHomePageContent(): Promise<HomePageContent> {
         links: buildPublicationLinks(publication),
       }));
 
-    const teamMembers: HomepageTeamMember[] = teamResult.members.map(
-      (member) => ({
+    const principalInvestigatorMember: HomepageTeamMember = {
+      name: teamResult.principalInvestigator.name,
+      role: teamResult.principalInvestigator.title ?? null,
+      affiliation: null,
+      focus: null,
+      photoUrl:
+        teamResult.principalInvestigator.portrait?.medium ||
+        teamResult.principalInvestigator.portrait?.large ||
+        teamResult.principalInvestigator.portrait?.small ||
+        teamResult.principalInvestigator.portrait?.thumbnail ||
+        teamResult.principalInvestigator.portrait?.url ||
+        teamResult.principalInvestigator.photoUrl ||
+        null,
+      photoAlt:
+        teamResult.principalInvestigator.portrait?.alt ??
+        teamResult.principalInvestigator.name,
+    };
+
+    const rawTeamMembers: HomepageTeamMember[] = [
+      principalInvestigatorMember,
+      ...teamResult.members.map((member) => ({
         name: member.name,
+        role: member.role?.trim() || null,
+        affiliation: member.affiliation?.trim() || null,
+        focus: member.focus?.trim() || null,
         photoUrl:
           member.portrait?.medium ||
           member.portrait?.large ||
@@ -234,14 +284,27 @@ export async function getHomePageContent(): Promise<HomePageContent> {
           member.photoUrl ||
           null,
         photoAlt: member.portrait?.alt ?? null,
-      })
-    );
+      })),
+    ];
+
+    const seen = new Set<string>();
+    const teamMembers = rawTeamMembers.filter((member) => {
+      const key = member.name.trim().toLowerCase();
+      if (seen.has(key)) {
+        return false;
+      }
+      seen.add(key);
+      return true;
+    });
 
     return {
       hero,
       about,
       featuredPublications,
       teamMembers,
+      teamMembersTitle:
+        teamResult.membersSectionTitle?.trim() ||
+        FALLBACK_HOME_PAGE.teamMembersTitle,
     };
   } catch (error) {
     console.error("Error fetching home page content:", error);

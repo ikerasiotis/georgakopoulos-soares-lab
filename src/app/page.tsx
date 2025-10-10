@@ -8,7 +8,7 @@ import { NEWS_ITEMS, RESEARCH_HIGHLIGHTS } from "./_lib/home-page-data";
 import { getHomePageContent } from "@/libs/api";
 
 export default async function Index() {
-  const { hero, about, featuredPublications, teamMembers } =
+  const { hero, about, featuredPublications, teamMembers, teamMembersTitle } =
     await getHomePageContent();
 
   return (
@@ -22,7 +22,7 @@ export default async function Index() {
       />
       <ResearchHighlights highlights={RESEARCH_HIGHLIGHTS} />
       <FeaturedPublications publications={featuredPublications} />
-      <TeamSpotlight members={teamMembers} />
+      <TeamSpotlight title={teamMembersTitle} members={teamMembers} />
       <NewsSection news={NEWS_ITEMS} />
     </div>
   );
