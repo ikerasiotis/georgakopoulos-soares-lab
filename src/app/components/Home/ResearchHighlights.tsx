@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import type { ResearchHighlight } from "@/app/_lib/home-page-data";
+import type { HomepageResearchHighlight } from "@/libs/api";
 
 const accentStyles: Record<string, string> = {
   primary: "text-primary bg-primary/10",
@@ -35,7 +35,7 @@ function HighlightIcon({ accent }: { accent: string }) {
 export function ResearchHighlights({
   highlights,
 }: {
-  highlights: ResearchHighlight[];
+  highlights: HomepageResearchHighlight[];
 }) {
   return (
     <section className="py-16 bg-light research-bg" aria-labelledby="research-highlights">

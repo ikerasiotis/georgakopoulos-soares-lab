@@ -1,7 +1,9 @@
 import axios from "axios";
 
 import { getPublications } from "./Publications";
+import { getResearchPageContent } from "./ResearchPage";
 import { getTeamPageContent } from "./TeamPage";
+import { getAllNews } from "./News";
 
 type StrapiImageFormats = Record<string, { url?: string | null }> | null;
 
@@ -61,6 +63,24 @@ export interface HomepagePublication {
   links: HomepagePublicationLink[];
 }
 
+export interface HomepageResearchHighlight {
+  title: string;
+  description: string;
+  accent: "primary" | "secondary" | "accent";
+  href: string;
+}
+
+export interface HomepageNewsItem {
+  id: string;
+  date: string;
+  title: string;
+  excerpt: string;
+  category: string;
+  href: string;
+  thumbnailUrl?: string | null;
+  thumbnailAlt?: string | null;
+}
+
 export interface HomepageTeamMember {
   name: string;
   photoUrl?: string | null;
@@ -82,6 +102,8 @@ export interface HomePageContent {
     imageAlt?: string | null;
   };
   featuredPublications: HomepagePublication[];
+  researchHighlights: HomepageResearchHighlight[];
+  newsItems: HomepageNewsItem[];
   teamMembers: HomepageTeamMember[];
   teamMembersTitle: string;
 }
@@ -99,6 +121,53 @@ const FALLBACK_HOME_PAGE: HomePageContent = {
     imageAlt: null,
   },
   featuredPublications: [],
+  researchHighlights: [
+    {
+      title: "Novel Mutational Signatures",
+      description:
+        "Identifying previously unknown mutational signatures in paediatric cancers and uncovering their aetiology.",
+      accent: "primary",
+      href: "/research",
+    },
+    {
+      title: "Genomic Instability Patterns",
+      description:
+        "Developing methods to quantify genomic instability and link it to treatment response across cancer types.",
+      accent: "secondary",
+      href: "/research",
+    },
+    {
+      title: "Machine Learning Biomarkers",
+      description:
+        "Building machine learning models that translate mutational signatures into actionable biomarkers.",
+      accent: "accent",
+      href: "/research",
+    },
+  ],
+  newsItems: [
+    {
+      id: "fallback-1",
+      date: "June 15, 2023",
+      title: "New Publication in Nature Genetics",
+      excerpt:
+        "Our latest research on mutational signatures in paediatric cancers reveals patterns with implications for early detection and treatment.",
+      category: "Publication",
+      href: "/news",
+      thumbnailUrl: null,
+      thumbnailAlt: null,
+    },
+    {
+      id: "fallback-2",
+      date: "May 28, 2023",
+      title: "Lab Welcomes New Postdoctoral Researcher",
+      excerpt:
+        "We are delighted to welcome Dr. Emma Thompson, who will lead our translational genomics initiatives.",
+      category: "Team",
+      href: "/news",
+      thumbnailUrl: null,
+      thumbnailAlt: null,
+    },
+  ],
   teamMembers: [],
   teamMembersTitle: "Meet Our Team",
 };
@@ -205,9 +274,30 @@ function formatPublicationVenue(
   return null;
 }
 
+function formatNewsDate(dateString?: string | null): string {
+  if (!dateString) {
+    return "";
+  }
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) {
+    return dateString;
+  }
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 export async function getHomePageContent(): Promise<HomePageContent> {
   try {
-    const [homeRes, publicationsResult, teamResult] = await Promise.all([
+    const [
+      homeRes,
+      publicationsResult,
+      teamResult,
+      researchContent,
+      newsResult,
+    ] = await Promise.all([
       axios.get<StrapiHomePageResponse>(
         `${process.env.NEXT_PUBLIC_API_URL}/api/home-page?populate=aboutImage`,
         {
@@ -219,6 +309,8 @@ export async function getHomePageContent(): Promise<HomePageContent> {
       ),
       getPublications(1, 3),
       getTeamPageContent(),
+      getResearchPageContent(),
+      getAllNews(1, 3),
     ]);
 
     const attributes = extractHomeAttributes(homeRes.data?.data);
@@ -249,6 +341,48 @@ export async function getHomePageContent(): Promise<HomePageContent> {
             .join(", ") || null,
         links: buildPublicationLinks(publication),
       }));
+
+    const researchHighlightsSource = Array.isArray(
+      researchContent?.approachHighlights
+    )
+      ? researchContent.approachHighlights
+      : [];
+    const researchHighlights: HomepageResearchHighlight[] =
+      researchHighlightsSource.slice(0, 3).map((highlight) => ({
+        title: highlight.title,
+        description: highlight.description,
+        accent: highlight.accent,
+        href: "/research",
+      }));
+
+    const newsItemsSource = Array.isArray(newsResult?.data)
+      ? newsResult.data
+      : [];
+    const newsItems: HomepageNewsItem[] = newsItemsSource
+      .slice(0, 3)
+      .map((item, index) => {
+        const slug = item.slug?.trim();
+        const id =
+          slug ??
+          (typeof item.id !== "undefined" ? String(item.id) : `news-${index}`);
+        const category = item.category?.trim() || "News";
+
+        return {
+          id,
+          date: formatNewsDate(item.date),
+          title: item.title,
+          excerpt: item.excerpt || item.content || "",
+          category,
+          href: slug ? `/news/${slug}` : `/news/${item.id}`,
+          thumbnailUrl:
+            item.thumbnail?.medium ||
+            item.thumbnail?.small ||
+            item.thumbnail?.thumbnail ||
+            item.thumbnail?.url ||
+            null,
+          thumbnailAlt: item.thumbnail?.alt ?? item.title,
+        } satisfies HomepageNewsItem;
+      });
 
     const principalInvestigatorMember: HomepageTeamMember = {
       name: teamResult.principalInvestigator.name,
@@ -301,6 +435,10 @@ export async function getHomePageContent(): Promise<HomePageContent> {
       hero,
       about,
       featuredPublications,
+      researchHighlights: researchHighlights.length
+        ? researchHighlights
+        : FALLBACK_HOME_PAGE.researchHighlights,
+      newsItems: newsItems.length ? newsItems : FALLBACK_HOME_PAGE.newsItems,
       teamMembers,
       teamMembersTitle:
         teamResult.membersSectionTitle?.trim() ||
